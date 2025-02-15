@@ -2,8 +2,7 @@
 
 export TODO=TODOS
 export NUM_REGISTROS=10
-export URL_BASE=https://hnrgqpsezj.execute-api.us-east-1.amazonaws.com/Prod
-
+export URL_BASE=${1}
 #curl -s -X POST https://hnrgqpsezj.execute-api.us-east-1.amazonaws.com/Prod/todos --data '{"text":"TEST CREASTE CURL API GW"}' | grep "\"statusCode\": 200"
 
 ST=$(curl -s -X POST https://hnrgqpsezj.execute-api.us-east-1.amazonaws.com/Prod/todos --data '{"text":"TEST CREASTE CURL API GW"}' | jq '.statusCode')
