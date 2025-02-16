@@ -11,7 +11,7 @@ def entorno="staging"
 
 
 def executeBasicShellCmds(def Stagge){
-    println(" Comenzando y estamos en:" + Stagge +"[ ${WORKSPACE} ] y JOB [ ${JOB_NAME} ] YY NODO:  [ ${NODE_NAME} ]")    
+    println(" Comenzando y estamos en:" + Stagge +"[ ${WORKSPACE} ] y JOB [ ${JOB_NAME} ] YY NODO:  [ ${NODE_NAME} ] Y RAMA: [${BRANCH_NAME} ]")    
     sh 'whoami && hostname && uname -a '
     pwd()
     sh 'ls -la'
