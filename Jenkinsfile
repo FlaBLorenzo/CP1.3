@@ -179,7 +179,7 @@ pipeline {
                                 // sh " git config --global --unset-all credential.helper"
                                 
                                 sh label: 'Probamos ramas y git merge', script:'bash      test/CHECK_RAMAS.ksh'
-                                sshagent(credentials: ['githup_app']) { sh "git push origin master" }
+                                sshagent(credentials: ['9e0cf611-afca-4cbf-922c-f45270055d06']) { sh "git push origin master" }
                                 }
                         }
                    
