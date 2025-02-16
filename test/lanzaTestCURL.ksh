@@ -3,7 +3,8 @@
 export TODO=TODOS
 export NUM_REGISTROS=40
 export URL_BASE=${1}
-export RW_RO_MODE=${2}
+export RW_RO_MODE="RW"
+echo $region
 #curl -s -X POST https://hnrgqpsezj.execute-api.us-east-1.amazonaws.com/Prod/todos --data '{"text":"TEST CREASTE CURL API GW"}' | grep "\"statusCode\": 200"
 echo $RW_RO_MODE
 
@@ -50,4 +51,5 @@ else
         echo "NO SE HA INSERTADO NADA"
         exit 2
 fi
+
 
