@@ -49,7 +49,6 @@ class TestApi(unittest.TestCase):
         self.assertTrue(response.json())
         
         print('End - integration test List TODO')
-      
     def test_api_addtodo(self):
         print('---------------------------------------')
         print('Starting - integration test Add TODO')
