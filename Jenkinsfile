@@ -169,18 +169,10 @@ pipeline {
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE'){
                         script {
                                 pwd()
-                                echo 'Promote '
-                                // sh """
-                                //    git branch -a
-                                //    git checkout -b develop origin/develop
-                                //    git checkout -b master origin/master
-                                //    # git merge develop
-                                //"""
-                                // sh " git config --global --unset-all credential.helper"
-                                
+                                println(" Mergeamos ")                           
                                 sh label: 'Probamos ramas y git merge', script:'bash      test/CHECK_RAMAS.ksh'
-                                // sh "git push origin master"
-                                sshagent(['9e0cf611-afca-4cbf-922c-f45270055d06']) { sh "git push origin master" }
+                               
+                                // sshagent(['9e0cf611-afca-4cbf-922c-f45270055d06']) { sh "git push origin master" }
                                 }
                         }
                    
