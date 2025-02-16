@@ -1,3 +1,5 @@
+#!/bin/bash
+
 export TODO=TODOS
 export NUM_REGISTROS=40
 export URL_BASE=${1}
