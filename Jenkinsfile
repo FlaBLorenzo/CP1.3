@@ -182,10 +182,10 @@ pipeline {
                                 //    git checkout -b master origin/master
                                 //    # git merge develop
                                 //"""
-                                sh " git config --global --unset-all credential.helper"
+                                // sh " git config --global --unset-all credential.helper"
                                 
                                 sh label: 'Probamos ramas y git merge', script:'bash      test/CHECK_RAMAS.ksh'
-                                sshagent(credentials: ['4c38e0ca-746e-4d08-b8f1-761859fca643']) { sh "git push origin master" }
+                                sshagent(credentials: ['githup_app']) { sh "git push origin master" }
                                 }
                         }
                    
