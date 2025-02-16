@@ -160,7 +160,7 @@ pipeline {
                 }
                    
             }
-        }
+        } 
         
         stage('Promote'){  //Testeamos con script custom
                     agent {label "main"}
