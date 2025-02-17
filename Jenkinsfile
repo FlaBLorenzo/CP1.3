@@ -5,10 +5,11 @@
 
 
 def repo = "https://github.com/mgsunir/todo-list-aws.git"
-def rama = "develop"
+def rama = "master"
 def region="us-east-1"
-def entorno="staging"
-def stack_name="todo-list-aws-staging"
+def entorno="production"
+def stack_name="todo-list-aws-production"
+
 
 def executeBasicShellCmds(def Stagge){
     println(" Comenzando y estamos en:" + Stagge +"[ ${WORKSPACE} ] y JOB [ ${JOB_NAME} ] YY NODO:  [ ${NODE_NAME} ] ")    
@@ -28,7 +29,6 @@ pipeline {
             steps {
                 
                 executeBasicShellCmds('CleanUp Workspace Main')    
-                // deleteDir()
                 cleanWs()
                 echo "Workspace cleaned"
             }
@@ -39,7 +39,6 @@ pipeline {
             steps {
                 
                 executeBasicShellCmds('CleanUp Workspace Agente1')    
-                // deleteDir()
                 cleanWs()
                 echo "Workspace cleaned"
             }
@@ -50,7 +49,6 @@ pipeline {
             steps {
                 
                 executeBasicShellCmds('CleanUp Workspace Agente2')    
-                // deleteDir()
                 cleanWs()
                 echo "Workspace cleaned"
             }
@@ -60,59 +58,24 @@ pipeline {
             agent {label "main"}
             steps {
                 executeBasicShellCmds('Get Code')
-                echo "WORKSPACE: ${env.WORKSPACE}"
-                // Me traigo del repor la rama demandada
+       
+                // git branch: 'feature_fix_coverage', url: 'https://github.com/mgsunir/res-helloworld.git'
+                // Me traigo la rama demandada
                 git branch: "${rama}", url:  "${repo}"
                 
-                
+                echo "WORKSPACE: ${env.WORKSPACE}"
                 sh 'ls -la'
                 
-                // HAY QUE STASHEAR EL src, test. pipelines , ficheros
+                // HAY QUE STASHEAR EL result-unit
                 stash includes: 'src/**', name: 'src'
                 stash includes: 'test/**', name: 'test'
                 stash includes: 'pipelines/**', name: 'pipelines'
                 stash includes: '*.*', name : 'ficheros'
             }
         }
-        
-        stage('Static') {
-            agent {label "agente1"}
-            steps {
-                unstash 'src'
-                unstash 'test'
-                unstash 'ficheros'
-                // unstash 'pipelines' NO ES NECESARIO AQUI
-                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE'){
-                executeBasicShellCmds('Static')
-                    script {
-                        sh "python -m flake8 --exit-zero --format=pylint src/*.py >flake8.out"
-                    }  
-                recordIssues tools: [flake8(name: 'Flake8', pattern: 'flake8.out')],                                 qualityGates: [[threshold: 10, type: 'TOTAL', unstable: true],                                                [threshold: 11, type: 'TOTAL', unstable: false]]                     }
-                
-            }
-        }
-        
-        stage('Security'){
-                agent {label "agente1"}
-                steps {
-                    catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE'){
-                        unstash 'src'
-                        unstash 'test'
-                        unstash 'ficheros'
-                        executeBasicShellCmds('Security')
-                
-                        // Ejecutamos bandit para  pruebas de seguridad
-                        sh 'python -m bandit --exit-zero -r . -f custom -o bandit.out --msg-template "{abspath}:{line}: {severity}: {test_id}: {msg}"'
-                        
-                        // Sacamos grafica con resultados
-                        recordIssues tools: [pyLint(name: 'Bandit', pattern: 'bandit.out')], qualityGates: [[threshold: 2, type: 'TOTAL', unstable: true], [threshold: 4, type: 'TOTAL', unstable: false]]    
-                                                                                                  
-                    }
-                } 
-        }
-        
-                stage('Deploy'){
-                agent {label "main"}
+      
+        stage('Deploy'){
+            agent {label "main"}
                 steps {
                     catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE'){
                         // unstash 'src'
@@ -136,81 +99,55 @@ pipeline {
                 }
 
                 
-                stage('ApiRest'){  //Testeamos con pytest
-                    agent {label "main"}
-                    steps{
-                        // executeBasicShellCmds('ApiRest')
-                        // unstash 'src'
-                        // unstash 'test'
-                        // unstash 'ficheros'
+        stage('RestTest'){  //Testeamos con pytest
+            agent {label "agente1"}
+                steps{
+                        executeBasicShellCmds('RestTest')
+                        unstash 'src'
+                        unstash 'test'
+                        unstash 'ficheros'
                         // unstash 'pipelines'
-
                         script {
-                            //def BASE_URL = sh( script: "aws cloudformation describe-stacks --stack-name todo-list-aws-staging --query 'Stacks[0].Outputs[?OutputKey==`BaseUrlApi`].OutputValue' --region us-east-1 --output text",returnStdout: true)
                             def BASE_URL = sh( script: "aws cloudformation describe-stacks --stack-name ${stack_name} --query 'Stacks[0].Outputs[?OutputKey==`BaseUrlApi`].OutputValue' --region us-east-1 --output text",returnStdout: true)
+                            // def BASE_URL = sh( script: "aws cloudformation describe-stacks --stack-name todo-list-aws-staging --query 'Stacks[0].Outputs[?OutputKey==`BaseUrlApi`].OutputValue' --region us-east-1 --output text",returnStdout: true)
                             env.GBASE_URL=sh( script: "echo ${BASE_URL}",returnStdout: true)
                             
                             echo "$BASE_URL"
                             echo 'Doing pytest the Whole Tests'
                             pwd()
-                            // TODOS LOS TESTS                            
-                            sh "bash pipelines/common-steps/integration.sh $BASE_URL"
-
-                            println("-------------- SOLO LECTURA ----------------")
                             // Probamos el full de metodos de la clase
                             // O con marcadores
                             // https://stackoverflow.com/questions/36456920/specify-which-pytest-tests-to-run-from-a-file
-                            // Ha habido que añadir la eqtiqueta ro en pytest.in
+                            
+                            //  sh "bash pipelines/common-steps/integration.sh $BASE_URL"
+                            println("-------------- SOLO LECTURA ----------------")
                            
                             sh """
                                 export BASE_URL=${env.GBASE_URL}
                                 echo "${BASE_URL} desde ${env.GBASE_URL}"
                                 pytest -s -m ro test/integration/todoApiTest.py
                                 """
-                            }
                         }
+                    }
                 }
         
         
                 stage('CurlTest'){  //Testeamos con script custom
-                    agent {label "agente1"}
+                    agent {label "main"}
                     steps{
-                        executeBasicShellCmds('IntTest2')
-                        unstash 'src'
-                        unstash 'test'
-                        unstash 'ficheros'
-                        
+                        executeBasicShellCmds('CurlTest')
                         script {
                             // Aprovecho la variable global entorno GBASE_URL del step anterior y la asigno
                             // def BASE_URL = sh( script: "aws cloudformation describe-stacks --stack-name todo-list-aws-staging --query 'Stacks[0].Outputs[?OutputKey==`BaseUrlApi`].OutputValue' --region us-east-1 --output text", returnStdout: true)
                             // echo "$BASE_URL"
                             pwd()
-                            sh "pwd"
                             echo 'Initiating Integration Tests2'
                             sh "echo ${GBASE_URL}"
                             sh 'bash      test/lanzaTestCURL.ksh ${GBASE_URL} '
                         }
-                   
                     }
-                }       
-        
-                stage('Promote'){  //Testeamos con script custom
-                    agent {label "main"}
-                    steps{
-                        executeBasicShellCmds('Promote')
-                        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE'){
-                        script {
-                                pwd()
-                                echo 'Promote '
-
-                                // sh " git config --global --unset-all credential.helper"
-                                
-                                sh label: 'Probamos ramas y git merge', script:'bash      test/CHECK_RAMAS.ksh'
-                                // sshagent(credentials: ['githup_app']) { sh "git push origin master" }
-                                }
-                        }
-                   
                 }
-        }
+        
+        
     }
 }
