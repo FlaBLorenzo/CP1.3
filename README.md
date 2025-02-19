@@ -1,9 +1,17 @@
+<<<<<<< HEAD
 # todo-list-aws  
 
  
 Este proyecto contiene un ejemplo de solución **SAM + Jenkins**. Contiene una aplicación API RESTful de libreta de tareas pendientes (ToDo) y los pipelines que permiten definir el CI/CD para productivizarla.
 
 ## Estructura    
+=======
+# todo-list-aws
+
+Este proyecto contiene un ejemplo de solución **SAM + Jenkins**. Contiene una aplicación API RESTful de libreta de tareas pendientes (ToDo) y los pipelines que permiten definir el CI/CD para productivizarla.
+
+## Estructura  
+>>>>>>> develop
 
 A continuación se describe la estructura del proyecto:  
 - **pipelines** - pipelines de Jenkins que permiten construir el CI/CD
