@@ -15,4 +15,5 @@ then
 fi
 
 git checkout master
+git status
 git merge develop
