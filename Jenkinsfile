@@ -1,7 +1,29 @@
+// Etquietas de los agentes
+// -------------------------
 // principal: dev test main
 // agente1: dev agente1
 // agente1: dev agente2
-
+// ------------------------
+// Los agentes arrancan solos en EC-2 ,por entrada en crontab
+// En crontab de root queda esto
+// @reboot /root/Lanza_Agentes.ksh
+// root@ip-172-31-24-104:/home/ubuntu# cat /root/Lanza_Agentes.ksh
+// #!/bin/bash
+// su - agente1 /home/agente1/LanzarAgente.ksh
+// su - agente2 /home/agente2/LanzarAgente.ksh
+// Cada agente arranca asi: Se puede poner lP publica elstaica como argumento o varioable de entorno
+// root@ip-172-31-24-104:/home/ubuntu# cat /home/agente2/LanzarAgente.ksh
+// #!/bin/bash
+// export AGENTE=${USER}
+// export IP_PUBLICA=3.224.41.136
+// ps -ef | grep -v grep| grep java | egrep  ${AGENTE}
+// if [ $? -ge 1 ]
+// then
+//        nohup java -jar agent.jar -url http://${IP_PUBLICA}:8080/ -secret @secret-file -name ${AGENTE} -webSocket -workDir "/home/${AGENTE}" &
+// else
+//         echo "YA SE HA LANZADO : AGENTE : ${AGENTE}"
+//fi
+// 
 
 
 def repo = "https://github.com/mgsunir/todo-list-aws.git"
@@ -48,7 +70,6 @@ pipeline {
             steps {
                 
                 executeBasicShellCmds('CleanUp Workspace Agente2')    
-                // deleteDir()
                 cleanWs()
                 echo "Workspace cleaned"
             }
@@ -84,8 +105,7 @@ pipeline {
                     script {
                         sh "python -m flake8 --exit-zero --format=pylint src/*.py >flake8.out"
                     }  
-                recordIssues tools: [flake8(name: 'Flake8', pattern: 'flake8.out')],                                 qualityGates: [[threshold: 10, type: 'TOTAL', unstable: true],                                                [threshold: 11, type: 'TOTAL', unstable: false]]                     }
-                
+                recordIssues tools: [flake8(name: 'Flake8', pattern: 'flake8.out')],qualityGates: [[threshold: 10, type: 'TOTAL', unstable: true],[threshold: 11, type: 'TOTAL', unstable: false]] }                
             }
         }
         
@@ -102,8 +122,7 @@ pipeline {
                         sh 'python -m bandit --exit-zero -r . -f custom -o bandit.out --msg-template "{abspath}:{line}: {severity}: {test_id}: {msg}"'
                         
                         // Sacamos grafica con resultados
-                        recordIssues tools: [pyLint(name: 'Bandit', pattern: 'bandit.out')], qualityGates: [[threshold: 2, type: 'TOTAL', unstable: true], [threshold: 4, type: 'TOTAL', unstable: false]]    
-                                                                                                  
+                        recordIssues tools: [pyLint(name: 'Bandit', pattern: 'bandit.out')], qualityGates: [[threshold: 2, type: 'TOTAL', unstable: true], [threshold: 4, type: 'TOTAL', unstable: false]]                                                                                                      
                     }
                 } 
         }
@@ -112,6 +131,9 @@ pipeline {
                 agent {label "main"}
                 steps {
                     catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE'){
+                        // unstash 'src'
+                        // unstash 'test'
+                        // unstash 'ficheros'
                         executeBasicShellCmds('Deploy')
                         sh """
                         
