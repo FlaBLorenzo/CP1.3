@@ -15,7 +15,6 @@ def executeBasicShellCmds(def Stagge){
     println(" Comenzando y estamos en:" + Stagge +"[ ${WORKSPACE} ] y JOB [ ${JOB_NAME} ] YY NODO:  [ ${NODE_NAME} ] ")    
     sh 'whoami && hostname && uname -a '
     pwd()
-    sh 'ls -la'
     sh 'echo ${region} ${entorno}'
 }
 
@@ -29,7 +28,6 @@ pipeline {
             steps {
                 
                 executeBasicShellCmds('CleanUp Workspace Main')    
-                // deleteDir()
                 cleanWs()
                 echo "Workspace cleaned"
             }
@@ -38,9 +36,7 @@ pipeline {
          stage('CleanUp Workspace Agente1'){   
             agent {label "agente1"}
             steps {
-                
                 executeBasicShellCmds('CleanUp Workspace Agente1')    
-                // deleteDir()
                 cleanWs()
                 echo "Workspace cleaned"
             }
@@ -49,9 +45,7 @@ pipeline {
      stage('CleanUp Workspace Agente2'){   
             agent {label "agente2"}
             steps {
-                
                 executeBasicShellCmds('CleanUp Workspace Agente2')    
-                // deleteDir()
                 cleanWs()
                 echo "Workspace cleaned"
             }
@@ -61,11 +55,8 @@ pipeline {
             agent {label "main"}
             steps {
                 executeBasicShellCmds('Get Code')
-       
         
-                
-                // git branch: 'feature_fix_coverage', url: 'https://github.com/mgsunir/res-helloworld.git'
-                // Me traigo0 la rama demandada
+                // Me traigo la rama demandada
                 git branch: "${rama}", url:  "${repo}"
                 
                 echo "WORKSPACE: ${env.WORKSPACE}"
@@ -140,13 +131,13 @@ pipeline {
                 stage('CurlTest'){  //Testeamos con script custom
                     agent {label "agente1"}
                     steps{
-                        executeBasicShellCmds('IntTest2')
+                        executeBasicShellCmds('CurlTest')
                         script {
                             // Aprovecho la variable global entorno GBASE_URL del step anterior y la asigno
                             // def BASE_URL = sh( script: "aws cloudformation describe-stacks --stack-name todo-list-aws-staging --query 'Stacks[0].Outputs[?OutputKey==`BaseUrlApi`].OutputValue' --region us-east-1 --output text", returnStdout: true)
                             // echo "$BASE_URL"
                             pwd()
-                            echo 'Initiating Integration Tests2'
+                            echo 'Initiating Integration '
                             sh "echo ${GBASE_URL}"
                             sh 'bash      test/lanzaTestCURL.ksh ${GBASE_URL} '
                         }
